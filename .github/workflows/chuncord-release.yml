@@ -81,7 +81,8 @@ jobs:
           sha256sum -c SHA256SUMS.txt
           tag="installer-$(cat source-revision.txt)"
           if ! gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            gh release create "$tag" --repo "$GITHUB_REPOSITORY" --draft --target "$GITHUB_SHA" --title "ChunCord Installer" --notes 'Windows x64 GUI installer for ChunCord. Select Discord and choose Install, Repair or Uninstall. Unsigned build. Client updates arrive inside Discord.' ChunCord-Installer.exe ChunCord-Installer-Cli.exe SHA256SUMS.txt source-revision.txt LICENSE README.md
+            gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA" --jq '"## Changes\n\n" + .commit.message + "\n\nSource: " + .html_url' > release-notes.md
+            gh release create "$tag" --repo "$GITHUB_REPOSITORY" --draft --target "$GITHUB_SHA" --title "ChunCord Installer" --generate-notes --notes-file release-notes.md ChunCord-Installer.exe ChunCord-Installer-Cli.exe SHA256SUMS.txt source-revision.txt LICENSE README.md
           fi
           if [ "$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft)" = true ]; then
             gh release upload "$tag" --repo "$GITHUB_REPOSITORY" --clobber ChunCord-Installer.exe ChunCord-Installer-Cli.exe SHA256SUMS.txt source-revision.txt LICENSE README.md

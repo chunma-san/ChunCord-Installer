@@ -1,3 +1,9 @@
+<!-- CAT-COUNTER:START -->
+<p align="center">
+  <img src="https://count.himiku.com/@chunma-chuncord-installer?theme=capoo-2&amp;padding=6&amp;scale=0.8&amp;darkmode=1" alt="Cute cat project visits counter" />
+</p>
+<!-- CAT-COUNTER:END -->
+
 # ChunCord Installer
 
 Install, repair or remove [ChunCord](https://github.com/chunma-san/ChunCord) on Windows.
