@@ -10,12 +10,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	path "path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 )
 
@@ -24,6 +22,7 @@ type GithubRelease struct {
 	TagName string `json:"tag_name"`
 	Assets  []struct {
 		Name        string `json:"name"`
+		Size        int64  `json:"size"`
 		DownloadURL string `json:"browser_download_url"`
 	} `json:"assets"`
 }
@@ -128,7 +127,7 @@ func InitGithubDownloader() {
 		return
 	}
 
-	Log.Debug("Found existing Equicord Install. Checking for hash...")
+	Log.Debug("Found existing ChunCord Install. Checking for hash...")
 
 	re := regexp.MustCompile(`// Equicord (\w+)`)
 	match := re.FindSubmatch(b)
@@ -150,54 +149,15 @@ func installLatestBuilds() (retErr error) {
 		return
 	}
 
-	downloadUrl := ""
-	for _, ass := range ReleaseData.Assets {
-		if ass.Name == "desktop.asar" {
-			downloadUrl = ass.DownloadURL
-			break
-		}
-	}
-
-	if downloadUrl == "" {
-		retErr = errors.New("Didn't find desktop.asar download link")
-		Log.Error(retErr)
-		return
-	}
-
-	Log.Debug("Downloading desktop.asar")
-
-	res, err := http.Get(downloadUrl)
-	if err == nil && res.StatusCode >= 300 {
-		err = errors.New(res.Status)
-	}
+	temporary, err := downloadVerifiedArtifact(&ReleaseData, "desktop.asar", "chunma-san/ChunCord", path.Dir(EquicordDirectory))
 	if err != nil {
-		Log.Error("Failed to download desktop.asar:", err)
-		retErr = err
-		return
+		return err
 	}
-	out, err := os.OpenFile(EquicordDirectory, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-	if err != nil {
-		Log.Error("Failed to create", EquicordDirectory+":", err)
-		retErr = err
-		return
+	defer os.Remove(temporary)
+	if err = replaceVerifiedArtifact(temporary, EquicordDirectory); err != nil {
+		return err
 	}
-	read, err := io.Copy(out, res.Body)
-	if err != nil {
-		Log.Error("Failed to download to", EquicordDirectory+":", err)
-		retErr = err
-		return
-	}
-	contentLength := res.Header.Get("Content-Length")
-	expected := strconv.FormatInt(read, 10)
-	if expected != contentLength {
-		err = errors.New("Unexpected end of input. Content-Length was " + contentLength + ", but I only read " + expected)
-		Log.Error(err.Error())
-		retErr = err
-		return
-	}
-
 	_ = FixOwnership(EquicordDirectory)
-
 	InstalledHash = LatestHash
-	return
+	return nil
 }

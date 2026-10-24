@@ -9,7 +9,7 @@
   "RT_MANIFEST": {
     "#1": {
       "0409": {
-        "description": "An Installer for the Equicord Discord Mod",
+        "description": "ChunCord Installer",
         "minimum-os": "win10",
         "execution-level": "as invoker",
         "dpi-awareness": "system"
@@ -22,10 +22,10 @@
         "info": {
           "0409": {
             "Comments": "Comments",
-            "CompanyName": "Equicord",
-            "FileDescription": "Equilotl",
-            "LegalCopyright": "© 2026 Vencord and Equicord contributors - GPL3.0",
-            "ProductName": "Equilotl",
+            "CompanyName": "chunma-san",
+            "FileDescription": "ChunCord Installer",
+            "LegalCopyright": "ChunCord maintained by chunma-san. Based on Vencord and Equicord contributors. GPL-3.0.",
+            "ProductName": "ChunCord Installer",
             "ProductVersion": ""
           }
         }

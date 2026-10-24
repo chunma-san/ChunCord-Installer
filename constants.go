@@ -11,14 +11,14 @@ import (
 	"image/color"
 )
 
-const ReleaseUrl = "https://api.github.com/repos/Equicord/Equicord/releases/latest"
-const ReleaseUrlFallback = "https://equicord.org/releases/equicord"
-const InstallerReleaseUrl = "https://api.github.com/repos/Equicord/Equilotl/releases/latest"
-const InstallerReleaseUrlFallback = "https://equicord.org/releases/equilotl"
+const ReleaseUrl = "https://api.github.com/repos/chunma-san/ChunCord/releases/latest"
+const ReleaseUrlFallback = ReleaseUrl
+const InstallerReleaseUrl = "https://api.github.com/repos/chunma-san/ChunCord-Installer/releases/latest"
+const InstallerReleaseUrlFallback = InstallerReleaseUrl
 
-var UserAgent = "Equilotl/" + buildinfo.InstallerGitHash + " (https://github.com/Equicord/Equilotl)"
+var UserAgent = "ChunCord-Installer/" + buildinfo.InstallerGitHash + " (https://github.com/chunma-san/ChunCord-Installer)"
 
-const SupportUrl = "https://equicord.org/discord"
+const SupportUrl = "https://github.com/chunma-san/ChunCord"
 
 var (
 	DiscordGreen        = color.RGBA{0, 133, 69, 0xff}

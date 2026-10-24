@@ -1,0 +1,87 @@
+name: ChunCord Installer
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: chuncord-installer-release
+  cancel-in-progress: false
+jobs:
+  build:
+    if: github.repository == 'chunma-san/ChunCord-Installer'
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+        with:
+          go-version-file: go.mod
+      - uses: msys2/setup-msys2@66cd2cce69caa17b53920067426061ca1de3a884
+        with:
+          path-type: inherit
+          install: mingw-w64-x86_64-gcc mingw-w64-x86_64-SDL2
+      - name: Test downloads and rollback in isolation
+        shell: pwsh
+        run: |
+          $env:EQUICORD_USER_DATA_DIR = Join-Path $env:RUNNER_TEMP 'chuncord-test-state'
+          New-Item -ItemType Directory -Path $env:EQUICORD_USER_DATA_DIR -Force | Out-Null
+          $env:CGO_ENABLED = '0'
+          go test -mod=readonly -tags cli ./...
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build Windows GUI and CLI
+        shell: msys2 {0}
+        run: |
+          set -euo pipefail
+          go mod download
+          go install github.com/tc-hib/go-winres@d743268d7ea168077ddd443c4240562d4f5e8c3e
+          "$(go env GOPATH)/bin/go-winres.exe" make --product-version 1.0.0
+          revision="$(git rev-parse --short=12 HEAD)"
+          tag="installer-$revision"
+          CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -mod=readonly -tags 'static gui' -ldflags "-s -w -H=windowsgui -extldflags=-static -X equilotl/buildinfo.InstallerGitHash=$revision -X equilotl/buildinfo.InstallerTag=$tag" -o ChunCord-Installer.exe
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -mod=readonly -tags cli -ldflags "-s -w -X equilotl/buildinfo.InstallerGitHash=$revision -X equilotl/buildinfo.InstallerTag=$tag" -o ChunCord-Installer-Cli.exe
+          mkdir -p release
+          cp ChunCord-Installer.exe ChunCord-Installer-Cli.exe LICENSE README.md release/
+          printf '%s\n' "$revision" > release/source-revision.txt
+          cd release
+          sha256sum ChunCord-Installer.exe ChunCord-Installer-Cli.exe > SHA256SUMS.txt
+      - name: Check CLI executable
+        shell: pwsh
+        run: |
+          $env:EQUICORD_USER_DATA_DIR = Join-Path $env:RUNNER_TEMP 'chuncord-test-state'
+          ./ChunCord-Installer-Cli.exe --version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: chuncord-windows
+          path: release/
+          if-no-files-found: error
+          retention-days: 7
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: chuncord-windows
+          path: release
+      - name: Publish verified Windows installer
+        working-directory: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          sha256sum -c SHA256SUMS.txt
+          tag="installer-$(cat source-revision.txt)"
+          if ! gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$tag" --repo "$GITHUB_REPOSITORY" --draft --target "$GITHUB_SHA" --title "ChunCord Installer $(cat source-revision.txt)" --notes 'Windows x64 GUI installer for ChunCord. Select Discord and choose Install, Repair or Uninstall. Unsigned build. Client updates arrive inside Discord.' ChunCord-Installer.exe ChunCord-Installer-Cli.exe SHA256SUMS.txt source-revision.txt LICENSE README.md
+          fi
+          if [ "$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft)" = true ]; then
+            gh release upload "$tag" --repo "$GITHUB_REPOSITORY" --clobber ChunCord-Installer.exe ChunCord-Installer-Cli.exe SHA256SUMS.txt source-revision.txt LICENSE README.md
+            gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --draft=false --latest
+          fi

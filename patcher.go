@@ -28,11 +28,11 @@ func init() {
 		Log.Debug("Using EQUICORD_USER_DATA_DIR")
 		BaseDir = dir
 	} else if dir = os.Getenv("DISCORD_USER_DATA_DIR"); dir != "" {
-		Log.Debug("Using DISCORD_USER_DATA_DIR/../EquicordData")
-		BaseDir = path.Join(dir, "..", "EquicordData")
+		Log.Debug("Using DISCORD_USER_DATA_DIR/../ChunCordData")
+		BaseDir = path.Join(dir, "..", "ChunCordData")
 	} else {
 		Log.Debug("Using UserConfig")
-		BaseDir = appdir.New("Equicord").UserConfig()
+		BaseDir = appdir.New("ChunCord").UserConfig()
 	}
 	dir := os.Getenv("EQUICORD_DIRECTORY")
 	if dir == "" {
@@ -49,7 +49,7 @@ func init() {
 		Log.Debug("Using EQUICORD_DIRECTORY")
 		EquicordDirectory = dir
 	} else {
-		EquicordDirectory = path.Join(BaseDir, "equicord.asar")
+		EquicordDirectory = path.Join(BaseDir, "chuncord.asar")
 	}
 }
 
@@ -217,7 +217,7 @@ func cleanupDesyncedPatchedInstall(dir string, isSystemElectron bool) (bool, err
 		return false, nil
 	}
 
-	Log.Warn("Detected a patched install with a non-Equicord app.asar. Discord was likely updated while patched; removing stale _app.asar")
+	Log.Warn("Detected a patched install with a non-ChunCord app.asar. Discord was likely updated while patched; removing stale _app.asar")
 
 	if err = os.Remove(_appAsar); err != nil {
 		return false, CheckIfErrIsCauseItsBusyRn(err)

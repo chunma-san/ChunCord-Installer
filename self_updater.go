@@ -10,8 +10,6 @@ import (
 	"equilotl/buildinfo"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"path"
 	"runtime"
@@ -46,10 +44,10 @@ func init() {
 }
 
 func GetInstallerDownloadLink() string {
-	const BaseUrl = "https://github.com/Equicord/Equilotl/releases/latest/download/"
+	const BaseUrl = "https://github.com/chunma-san/ChunCord-Installer/releases/latest/download/"
 	switch runtime.GOOS {
 	case "windows":
-		filename := Ternary(buildinfo.UiType == buildinfo.UiTypeCli, "EquilotlCli", "Equilotl")
+		filename := Ternary(buildinfo.UiType == buildinfo.UiTypeCli, "ChunCord-Installer-Cli", "ChunCord-Installer")
 		if runtime.GOARCH == "arm64" {
 			filename += "-arm64"
 		}
@@ -57,17 +55,17 @@ func GetInstallerDownloadLink() string {
 	case "darwin":
 		switch runtime.GOARCH {
 		case "amd64":
-			return BaseUrl + "Equilotl-x64.dmg"
+			return BaseUrl + "ChunCord-Installer-x64.dmg"
 		case "arm64":
-			return BaseUrl + "Equilotl-arm64.dmg"
+			return BaseUrl + "ChunCord-Installer-arm64.dmg"
 		default:
 			return ""
 		}
 	case "linux":
 		if runtime.GOARCH == "arm64" {
-			return BaseUrl + "EquilotlCli-linux-arm64"
+			return BaseUrl + "ChunCord-Installer-Cli-linux-arm64"
 		}
-		return BaseUrl + "EquilotlCli-linux"
+		return BaseUrl + "ChunCord-Installer-Cli-linux"
 	default:
 		return ""
 	}
@@ -75,7 +73,7 @@ func GetInstallerDownloadLink() string {
 
 func CanUpdateSelf() bool {
 	//goland:noinspection GoBoolExpressions
-	return IsSelfOutdated && runtime.GOOS != "darwin"
+	return IsSelfOutdated && runtime.GOOS == "windows"
 }
 
 func UpdateSelf() error {
@@ -97,39 +95,25 @@ func UpdateSelf() error {
 
 	ownExeDir := path.Dir(ownExePath)
 
-	res, err := http.Get(url)
+	release, err := GetGithubRelease(InstallerReleaseUrl, InstallerReleaseUrlFallback)
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
-
-	tmp, err := os.CreateTemp(ownExeDir, "EquilotlUpdate")
+	filename := path.Base(url)
+	tmpName, err := downloadVerifiedArtifact(release, filename, "chunma-san/ChunCord-Installer", ownExeDir)
 	if err != nil {
-		return fmt.Errorf("Failed to create tempfile: %w", err)
-	}
-	defer func() {
-		_ = tmp.Close()
-		_ = os.Remove(tmp.Name())
-	}()
-	if err = tmp.Chmod(0o755); err != nil {
-		return fmt.Errorf("Failed to chmod 755", tmp.Name()+":", err)
-	}
-
-	if _, err = io.Copy(tmp, res.Body); err != nil {
 		return err
 	}
+	defer os.Remove(tmpName)
 
-	if err = tmp.Close(); err != nil {
-		return err
+	if err = os.Rename(ownExePath, ownExePath+".old"); err != nil {
+		return fmt.Errorf("Failed to preserve previous installer: %w", err)
 	}
 
-	if err = os.Remove(ownExePath); err != nil {
-		if err = os.Rename(ownExePath, ownExePath+".old"); err != nil {
-			return fmt.Errorf("Failed to remove/rename own executable: %w", err)
+	if err = os.Rename(tmpName, ownExePath); err != nil {
+		if restore := os.Rename(ownExePath+".old", ownExePath); restore != nil {
+			return fmt.Errorf("Installer update failed: %v; restore failed: %v", err, restore)
 		}
-	}
-
-	if err = os.Rename(tmp.Name(), ownExePath); err != nil {
 		return fmt.Errorf("Failed to replace self with updated executable. Please manually redownload the installer: %w", err)
 	}
 

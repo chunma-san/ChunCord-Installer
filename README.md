@@ -1,96 +1,30 @@
-# Equilotl
+# ChunCord Installer
 
-The Equicord Installer allows you to install [Equicord, the cutest Discord Desktop client mod](https://github.com/Equicord/Equicord)
+A Windows installer for [ChunCord](https://github.com/chunma-san/ChunCord), based on [Equilotl](https://github.com/Equicord/Equilotl).
 
-![image](https://i.imgur.com/oHN41ss.png)
+## Install
 
-## Usage
+1. Download **[ChunCord-Installer.exe](https://github.com/chunma-san/ChunCord-Installer/releases/latest/download/ChunCord-Installer.exe)**.
+2. Close Discord, open the installer, choose your Discord installation and click **Install**.
+3. Start Discord and open **Settings → ChunCord → Plugins**.
 
-Windows
+No Git, Node.js or source folder is needed. The installer stores ChunCord in the user's application data folder. You can delete the downloaded installer after setup. Existing Equicord settings paths remain compatible.
 
-| | X64 | ARM64 |
-| --- | --- | --- |
-| GUI | [Download](https://github.com/Equicord/Equilotl/releases/latest/download/Equilotl.exe) | [Download](https://github.com/Equicord/Equilotl/releases/latest/download/Equilotl-arm64.exe) |
-| CLI | [Download](https://github.com/Equicord/Equilotl/releases/latest/download/EquilotlCli.exe) | [Download](https://github.com/Equicord/Equilotl/releases/latest/download/EquilotlCli-arm64.exe) |
+ChunCord checks its own GitHub releases for updates inside Discord. Keep update notifications enabled to know when to restart. Run this installer again for **Repair** after a Discord update, or use **Uninstall** to restore Discord.
 
-MacOS
+The published installer targets Windows x64. It is currently unsigned; Windows can display an unknown publisher prompt. Download it only from this repository's releases. A CLI build and SHA-256 checksums are included for users who need them.
 
-| | Universal | X64 | ARM64 |
-| --- | --- | --- | --- |
-| GUI | [Download](https://github.com/Equicord/Equilotl/releases/latest/download/Equilotl.dmg) | [Download](https://github.com/Equicord/Equilotl/releases/latest/download/Equilotl-x64.dmg) | [Download](https://github.com/Equicord/Equilotl/releases/latest/download/Equilotl-arm64.dmg) |
-| CLI | [Download](https://github.com/Equicord/Equilotl/releases/latest/download/EquilotlCli-universal) | [Download](https://github.com/Equicord/Equilotl/releases/latest/download/EquilotlCli-x64) | [Download](https://github.com/Equicord/Equilotl/releases/latest/download/EquilotlCli-arm64) |
+## Updates
 
-The CLI builds are plain binaries, so run `chmod +x <file>` after downloading.
+Client downloads, fallback handling and installer self-updates point to ChunCord repositories. They do not fall back to installing official Equicord builds. Downloads are checked against SHA-256 release checksums before replacing an installed file.
 
-Linux
+## Build
 
-| | X64 | ARM64 |
-| --- | --- | --- |
-| Combined GUI | [Download](https://github.com/Equicord/Equilotl/releases/latest/download/Equilotl) | [Download](https://github.com/Equicord/Equilotl/releases/latest/download/Equilotl-arm64) |
-| X11 GUI | [Download](https://github.com/Equicord/Equilotl/releases/latest/download/Equilotl-x11) | [Download](https://github.com/Equicord/Equilotl/releases/latest/download/Equilotl-x11-arm64) |
-| Wayland GUI | [Download](https://github.com/Equicord/Equilotl/releases/latest/download/Equilotl-wayland) | [Download](https://github.com/Equicord/Equilotl/releases/latest/download/Equilotl-wayland-arm64) |
-| CLI | [Download](https://github.com/Equicord/Equilotl/releases/latest/download/EquilotlCli-linux) | [Download](https://github.com/Equicord/Equilotl/releases/latest/download/EquilotlCli-linux-arm64) |
+Use the Go version in `go.mod`. The Windows GUI also requires MinGW-w64 and SDL2. The release workflow builds the GUI and CLI, runs tests and publishes only successful builds. Published artifacts contain no local settings or account data.
 
+## Contributors
 
-## Building from source
+- [chunma-san](https://github.com/chunma-san): ChunCord installer maintenance, integration and releases.
+- Original [Equilotl contributors](https://github.com/Equicord/Equilotl/graphs/contributors) and [Vencord Installer contributors](https://github.com/Vencord/Installer/graphs/contributors).
 
-### Prerequisites
-
-You need to install the [Go programming language](https://go.dev/doc/install) and GCC, the GNU Compiler Collection (MinGW on Windows)
-
-<details>
-<summary>Additionally, if you're using Linux, you have to install some additional dependencies:</summary>
-
-#### Base dependencies
-
-```sh
-apt install -y pkg-config libsdl2-dev libglx-dev libgl1-mesa-dev
-dnf install pkg-config libGL-devel libXxf86vm-devel
-```
-
-#### X11 dependencies
-
-```sh
-apt install -y xorg-dev
-dnf install libXcursor-devel libXi-devel libXinerama-devel libXrandr-devel
-```
-
-#### Wayland dependencies
-
-```sh
-apt install -y libwayland-dev libxkbcommon-dev wayland-protocols extra-cmake-modules
-dnf install wayland-devel libxkbcommon-devel wayland-protocols-devel extra-cmake-modules
-```
-
-</details>
-
-### Building
-
-#### Install dependencies
-
-```sh
-go mod tidy
-```
-
-#### Build the GUI
-
-##### Windows / Mac / Linux X11
-
-```sh
-make GUI=1
-```
-
-##### Linux Wayland
-
-```sh
-make GUI=1 WAYLAND=1
-```
-
-#### Build the CLI
-
-```
-go build --tags cli
-```
-
-You might want to pass some flags to this command to get a better build.
-See [the GitHub workflow](https://github.com/Equicord/Equilotl/blob/main/.github/workflows/release.yml) for what flags I pass or if you want more precise instructions
+Original source headers and the [GPL license](LICENSE) are preserved. This is an independent fork and is not affiliated with Discord, Equicord or Vencord.
