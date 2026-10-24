@@ -54,6 +54,8 @@ jobs:
           $env:EQUICORD_USER_DATA_DIR = Join-Path $env:RUNNER_TEMP 'chuncord-test-state'
           ./ChunCord-Installer-Cli.exe --version
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $installerInfo = [Diagnostics.FileVersionInfo]::GetVersionInfo((Resolve-Path './ChunCord-Installer.exe').Path)
+          if ($installerInfo.ProductName -ne 'ChunCord Installer' -or $installerInfo.CompanyName -ne 'chunma-san') { throw 'Windows installer metadata is incomplete.' }
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: chuncord-windows
