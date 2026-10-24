@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -8,6 +9,9 @@ import (
 	"strconv"
 	"strings"
 )
+
+//go:embed bootstrap.cjs
+var bootstrapSource string
 
 var PackageJson = `{
 	"name": "discord",
@@ -29,7 +33,12 @@ func WriteAppAsar(outFile string, equicordAsarPath string) error {
 	fileContents := ""
 
 	patcherPathB, _ := json.Marshal(equicordAsarPath)
-	indexJsContents := "require(" + string(patcherPathB) + ")"
+	indexJsContents := strings.ReplaceAll(bootstrapSource, "__CHUNCORD_PATH__", string(patcherPathB))
+	if strings.HasSuffix(equicordAsarPath, ".asar") {
+		if err := os.WriteFile(equicordAsarPath+".loader-version", []byte("1\n"), 0644); err != nil {
+			return err
+		}
+	}
 	indexJsBytes := len([]byte(indexJsContents))
 	fileContents += indexJsContents
 	files["index.js"] = asarEntry{
