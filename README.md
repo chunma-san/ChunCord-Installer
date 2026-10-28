@@ -32,6 +32,8 @@ Older installations that show an `EPERM` update error need one repair with the l
 
 Client downloads and installer updates use the ChunCord repositories. The installer does not fall back to an official Equicord build.
 
+Installed-version checks use the release's source commit metadata, with support for legacy revision suffixes in release titles. A clean display name such as `ChunCord` does not replace its source revision.
+
 ## Other downloads
 
 The [latest release](https://github.com/chunma-san/ChunCord-Installer/releases/latest) also includes a command-line installer and SHA-256 checksums. Most users only need **ChunCord-Installer.exe**.

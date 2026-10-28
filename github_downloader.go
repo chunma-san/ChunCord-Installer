@@ -18,9 +18,10 @@ import (
 )
 
 type GithubRelease struct {
-	Name    string `json:"name"`
-	TagName string `json:"tag_name"`
-	Assets  []struct {
+	Name            string `json:"name"`
+	TagName         string `json:"tag_name"`
+	TargetCommitish string `json:"target_commitish"`
+	Assets          []struct {
 		Name        string `json:"name"`
 		Size        int64  `json:"size"`
 		DownloadURL string `json:"browser_download_url"`
@@ -34,6 +35,18 @@ var GithubDoneChan chan bool
 var InstalledHash = "None"
 var LatestHash = "Unknown"
 var IsDevInstall bool
+
+// latestRevision returns the source revision of a release. Releases are titled
+// "ChunCord" without any appended hash, so the revision comes from
+// target_commitish (set by the release workflow); the title suffix is kept as a
+// fallback for releases that still carry one.
+func latestRevision(release *GithubRelease) string {
+	if match := regexp.MustCompile(`^[a-f0-9]{7,40}$`).FindString(strings.ToLower(release.TargetCommitish)); match != "" {
+		return match
+	}
+	i := strings.LastIndex(release.Name, " ") + 1
+	return release.Name[i:]
+}
 
 func GetGithubRelease(url, fallbackUrl string) (*GithubRelease, error) {
 	Log.Debug("Fetching", url)
@@ -102,8 +115,7 @@ func InitGithubDownloader() {
 
 		ReleaseData = *data
 
-		i := strings.LastIndex(data.Name, " ") + 1
-		LatestHash = data.Name[i:]
+		LatestHash = latestRevision(data)
 		Log.Debug("Finished fetching GitHub Data")
 		Log.Debug("Latest hash is", LatestHash, "Local Install is", Ternary(LatestHash == InstalledHash, "up to date!", "outdated!"))
 	}()
